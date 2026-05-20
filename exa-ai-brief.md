@@ -1,19 +1,20 @@
-# Exa AI — Company Intelligence Brief
+# Exa AI *(formerly Metaphor)* — Company Intelligence Brief
 *Generated: 2026-05-20*
 
 ---
 
 ## Overview
 
-Exa is an AI search company that developed novel representation learning techniques and crawling infrastructure to help Large Language Models (LLMs) intelligently find relevant information. It provides tools including a web search API, website crawler, and deep research API.
+Exa is a software development company that has developed a modern AI search engine with specialized APIs for web search, crawling, and research. The company aims to organize knowledge and provide infrastructure that allows LLMs to intelligently find and retrieve relevant information. Formerly known as Metaphor, it is based in San Francisco.
 
-**HQ:** San Francisco, California, United States  |  **Size:** 141
+**HQ:** San Francisco, California, United States  |  **Size:** 141 (LinkedIn data) / 75 (profile overview data)
 
 **Key products:** AI search engine, SERP API, website crawler tools, deep research API
 
 ### Leadership
 
 - **CEO:** Will Bryk
+- **CTO:** Not explicitly stated in current data, though Jeeyoung Kim is Head of Engineering
 
 ---
 
@@ -21,56 +22,105 @@ Exa is an AI search company that developed novel representation learning techniq
 
 | Round | Amount | Date |
 |---|---|---|
-| Series A | $17 million | 2024-07-16 |
+| Series C | $250 million | 2026-05-20 |
 
-**Total raised:** $22 million (includes prior $5 million seed)  
-**Key investors:** Lightspeed (Lightspeed Venture Partners), NVIDIA (NVentures), Y Combinator, Guru Chahal (lead, per TechCrunch)  
-**Valuation:** Not disclosed for the $17M Series A in the sources found  
+**Total raised:** ~$446 million  
+**Key investors:** Andreessen Horowitz, Benchmark  
+**Valuation:** $2.2 billion  
 
 ---
 
 ## Recent News
 
-- 2026-05-20: Exa announces Series C (a16z-led) and a $2.2B valuation
-- 2026-05-11: AWS blog highlights building web-search-enabled agents with Exa (integration with Strands Agents SDK)
-- 2026-05-20: Exa Labs completes a $250M financing round led by a16z (post-money $2.2B valuation)
-- 2026-04-17: Exa blog post describes building a “search engine orchestrator” (Canon) for observability/monitoring of complex search pipelines
-- 2026-03-24: Exa releases/opens WebCode benchmark suite for code search in coding agents
+- Exa Labs has raised $250 million in a new funding round led by Andreessen Horowitz (a16z), bringing its valuation to $2.2 billion as of May 2026.
 
 ### Product Launches
 
-- Exa Blog: “Composing a Search Engine” (search pipeline/orchestrator approach: Canon)
-- Exa releases “WebCode” benchmark suite for evaluating code search performance in coding agents
+- Exa launched 'Exa Deep' on March 4, 2026, a search endpoint utilizing LLM reasoning and query expansion for agentic workflows.
+- The Exa API is integrated into tools such as the 'strands-agents-tools' package to enable web-search-enabled AI agents.
 
 ---
 
 ## Competitors
 
-- Tavily (frequently cited for RAG-native search and pricing)
-- Firecrawl (specialized in web crawling and data extraction for LLMs)
-- Perplexity (offering search APIs and research-oriented retrieval)
-- Linkup (often cited for factual accuracy and company data)
-- Bright Data (provides scalable web search, crawling, and enrichment)
-- YOU.com (API-based search with multi-step reasoning capabilities)
+- Tavily
+- Firecrawl
+- Brave Search API
+- Jina AI
+- Linkup
+- Sonar (Perplexity API)
 
-Exa (formerly Metaphor) has established itself as a leading infrastructure provider for AI-native search, positioning itself as a premium "picks and shovels" player in the AI ecosystem. Valued at $2.2 billion as of May 2026, the company focuses on semantic, embedding-based search optimized for AI agents rather than consumer click-based search. The market for AI-powered web retrieval is highly competitive, characterized by specialized search APIs and data enrichment platforms. Exa generally leads in benchmarks for semantic research and complex retrieval tasks, while competitors often differentiate through specialized focus areas, such as RAG-specific transparency, factual verification, or cost-efficiency for specific developer workflows. The competitive landscape is fragmented into vendors providing direct search APIs, crawling and enrichment services, and integrated research assistants.
+Exa (formerly Metaphor) occupies the specialized "search-as-infrastructure" market for AI agents and LLMs, distinguishing itself from consumer-facing search engines (Google, Perplexity) by optimizing for machine-readable results, semantic relevance, and API-first integration rather than ad-driven consumer clicks. As of May 2026, Exa has secured a $2.2 billion valuation, positioning itself as a critical backend provider in the agentic AI stack. While it competes for developer mindshare against other specialized retrieval/crawling APIs, its primary strategic challenge involves defending its proprietary index and embedding-based retrieval quality against large-scale search incumbents (Google, OpenAI) and enterprise search platforms that are increasingly integrating agentic search capabilities.
+
+---
+
+## Hiring Signals
+
+**Open roles:**
+
+- Software Engineer, Web Crawling
+- Software Engineer, Infrastructure
+- Software Engineer, Backend
+- Growth Engineer
+
+**Active hiring teams:** Engineering (Infrastructure), Engineering (Backend), Engineering (Web Crawling), Engineering (Growth)
+
+Exa is hiring engineering roles via its Ashby job board (jobs.ashbyhq.com/exa) and is also actively listing openings on its LinkedIn company page (active job postings and “Open Positions”).
+
+---
+
+## Key Contacts
+
+**Engineering leads:**
+
+- Jeeyoung Kim (Head of Engineering)
+- Li Fan (Head of Search Infra)
+
+**Recruiters:**
+
+- Sophia Sharif (Recruiter Software Engineer)
+
+**Notable engineers:**
+
+- Shreyas Sreenivas (Founding Engineer)
+- Michael Fine (Head of ML/Machine Learning Researcher)
+- Ishan Goswami (Growth Engineering)
+- Benjamin Y Chan (Research)
+- Joshua Ahn (Evals Lead)
 
 ---
 
 ## Sources
 
 [1] [Exa](https://linkedin.com/company/exa-ai)
-[2] [Exa raises $17M from Lightspeed, Nvidia, Y Combinator to build a Google for AIs | TechCrunch](https://techcrunch.com/2024/07/16/exa-raises-17m-lightspeed-nvidia-ycombinator-google-ai-models/)
-[3] [Series A - Exa](https://www.crunchbase.com/funding_round/exa-1b30-series-a--04d9a6ed)
-[4] [Exa is Building the Search Engine for the AI Era](https://www.a16z.news/p/exa-is-building-the-search-engine)
-[5] [Building web search-enabled agents with Strands and Exa | Artificial Intelligence](https://aws.amazon.com/blogs/machine-learning/building-web-search-enabled-agents-with-strands-and-exa/)
-[6] [Exa Labs completes a new round of financing of $250 million, led by a16z | WEEX Crypto News](https://www.weex.com/news/detail/exa-labs-completes-a-new-round-of-financing-of-250-million-led-by-a16z-zz9oeqyhnj3hwu6pcn9tb71m)
-[7] [Composing a Search Engine | Exa Blog](https://exa.ai/blog/composing-a-search-engine)
-[8] [Exa Unveils New Code Search Benchmarks | StartupHub.ai](https://www.startuphub.ai/ai-news/artificial-intelligence/2026/exa-unveils-new-code-search-benchmarks)
-[9] [Top 5 Exa Alternatives for AI Web Search and Data Extraction in 2026](https://www.firecrawl.dev/blog/exa-alternatives)
-[10] [Top 5 Exa Alternatives for AI Web Search in 2026](https://brightdata.com/blog/ai/exa-alternatives)
-[11] [Exa's $2.2 billion valuation shows AI search has become a premium bet - Startup Fortune](https://startupfortune.com/exas-22-billion-valuation-shows-ai-search-has-become-a-premium-bet/)
-[12] [Tavily vs Exa vs Perplexity vs YOU.com: The Complete AI Search API Comparison 2025](https://www.humai.blog/tavily-vs-exa-vs-perplexity-vs-you-com-the-complete-ai-search-api-comparison-2025/)
+[2] [Exa is Building the Search Engine for the AI Era](https://www.a16z.news/p/exa-is-building-the-search-engine)
+[3] [Andreessen-Backed AI Search Startup Exa Valued at $2.2 Billion](https://www.bloomberg.com/news/articles/2026-05-20/andreessen-backed-ai-search-startup-exa-valued-at-2-2-billion)
+[4] [Exa Labs 2026 Company Profile: Valuation, Funding & Investors | PitchBook](https://pitchbook.com/profiles/company/481189-15)
+[5] [Exa raises $17M from Lightspeed, Nvidia, Y Combinator to build a Google for AIs | TechCrunch](https://techcrunch.com/2024/07/16/exa-raises-17m-lightspeed-nvidia-ycombinator-google-ai-models/)
+[6] [Exa Labs raises $250M to compete in AI search market](https://cryptobriefing.com/exa-labs-250m-ai-search/)
+[7] [Exa Labs completes a new round of financing of $250 million, led by a16z | WEEX Crypto News](https://www.weex.com/news/detail/exa-labs-completes-a-new-round-of-financing-of-250-million-led-by-a16z-zz9oeqyhnj3hwu6pcn9tb71m)
+[8] [Exa's $2.2 billion valuation shows AI search has become a premium bet - Startup Fortune](https://startupfortune.com/exas-22-billion-valuation-shows-ai-search-has-become-a-premium-bet/)
+[9] [Building web search-enabled agents with Strands and Exa | Artificial Intelligence](https://aws.amazon.com/blogs/machine-learning/building-web-search-enabled-agents-with-strands-and-exa/)
+[10] [Introducing Exa Deep: An Agent for Every Search | Exa Blog](https://exa.ai/blog/exa-deep)
+[11] [Exa revenue, valuation & funding | Sacra](https://sacra.com/research/exa)
+[12] [What Is Exa AI? The $700M Search Engine Built for AI | OneAway](https://oneaway.io/blog/what-is-exa-ai)
+[13] [Search, Perfected for AI: Why We're Doubling Down on Exa - Lightspeed Venture Partners](https://lsvp.com/stories/search-perfected-for-ai-why-were-doubling-down-on-exa/)
+[14] [Top 5 Exa Alternatives for AI Web Search and Data Extraction in 2026](https://www.firecrawl.dev/blog/exa-alternatives)
+[15] [Top 5 Exa Alternatives for AI Web Search in 2026](https://brightdata.com/blog/ai/exa-alternatives)
+[16] [Exa hiring Software Engineer, Web Crawling in Singapore, Singapore | LinkedIn](https://sg.linkedin.com/jobs/view/software-engineer-web-crawling-at-exa-4342986506)
+[17] [Software Engineer, Infrastructure @ Exa](https://jobs.ashbyhq.com/exa/2fbb5f73-528f-4ab5-b216-1d73bc0dd34a)
+[18] [Software Engineer, Backend @ Exa](https://jobs.ashbyhq.com/exa/41eb773d-9909-422c-b6b8-5bbdc407d318)
+[19] [Growth Engineer @ Exa](https://jobs.ashbyhq.com/exa/5cb04a48-ebd3-400a-9198-a4e6c9b12a75)
+[20] [Exa Jobs](https://jobs.ashbyhq.com/exa)
+[21] [Exa](https://www.linkedin.com/company/exa-ai)
+[22] [Sophia Sharif](https://linkedin.com/in/sophia-sharif-073bb3172)
+[23] [Jeeyoung Kim](https://linkedin.com/in/jeeyoungkim)
+[24] [Will Bryk](https://linkedin.com/in/william-bryk)
+[25] [Shreyas S.](https://linkedin.com/in/shreyas-sreenivas)
+[26] [Michael Fine](https://linkedin.com/in/michael-fine-4b073545)
+[27] [Ishan Goswami](https://linkedin.com/in/theishangoswami)
+[28] [Benjamin Y Chan](https://linkedin.com/in/vervious)
+[29] [Joshua Ahn](https://linkedin.com/in/jjahn1)
 
 ---
 

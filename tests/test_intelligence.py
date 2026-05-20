@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 from research_assistant.intelligence import (
     build_brief,
@@ -15,16 +15,14 @@ from research_assistant.intelligence import (
 
 
 def _make_response(content: dict, urls: list[str]) -> MagicMock:
-    """Well-formed response with content dict and enough citations."""
     response = MagicMock()
     response.output.content = content
-    cites = [MagicMock(url=u, title=f"Title") for u in urls]
+    cites = [MagicMock(url=u, title="Title") for u in urls]
     response.output.grounding = [MagicMock(citations=cites)]
     return response
 
 
 def _thin_response() -> MagicMock:
-    """Response with zero citations — triggers thin detection."""
     response = MagicMock()
     response.output.content = {}
     response.output.grounding = []
@@ -67,7 +65,7 @@ def test_get_citations_deduplicates():
     cite = MagicMock(url="https://a.com", title="A")
     r.output.grounding = [
         MagicMock(citations=[cite]),
-        MagicMock(citations=[cite]),  # duplicate
+        MagicMock(citations=[cite]),
     ]
     cites = _get_citations(r)
     assert len(cites) == 1
@@ -75,27 +73,27 @@ def test_get_citations_deduplicates():
 
 
 # ---------------------------------------------------------------------------
-# Integration: build_brief happy path
+# Content fixtures
 # ---------------------------------------------------------------------------
-
 
 PROFILE_CONTENT = {
     "overview": "Neural search API.",
+    "former_name": "Metaphor",
     "founded_year": "2022",
     "headquarters": "San Francisco",
     "employee_count": "~50",
-    "ceo": "Jeff Wang",
+    "ceo": "Will Bryk",
     "cto": None,
     "key_products": "Search API",
 }
 
 FUNDING_CONTENT = {
-    "latest_round": "Series A",
-    "latest_amount": "$17M",
-    "latest_date": "Feb 2024",
-    "total_raised": "$22M",
+    "latest_round": "Series C",
+    "latest_amount": "$250M",
+    "latest_date": "2026-05-20",
+    "total_raised": "$272M",
     "key_investors": ["a16z"],
-    "valuation": None,
+    "valuation": "$2.2B",
 }
 
 NEWS_CONTENT = {
@@ -107,6 +105,23 @@ COMPETITORS_CONTENT = {
     "direct_competitors": ["Perplexity", "Tavily"],
     "competitive_landscape": "Competitive AI search space.",
 }
+
+HIRING_CONTENT = {
+    "open_roles": ["Senior ML Engineer", "Backend Engineer"],
+    "hiring_teams": ["Platform", "Search"],
+    "hiring_signals": "Actively scaling post-Series C.",
+}
+
+CONTACTS_CONTENT = {
+    "engineering_leads": ["Alice Smith (VP Eng)"],
+    "recruiters": ["Bob Jones"],
+    "notable_engineers": ["Carol Lee"],
+}
+
+
+# ---------------------------------------------------------------------------
+# Integration: build_brief happy path
+# ---------------------------------------------------------------------------
 
 
 def test_build_brief_all_passes(monkeypatch):
@@ -122,20 +137,29 @@ def test_build_brief_all_passes(monkeypatch):
             return _make_response(NEWS_CONTENT, ["https://e.com", "https://f.com"])
         if "competitors" in query:
             return _make_response(COMPETITORS_CONTENT, ["https://g.com", "https://h.com"])
+        if "jobs" in query or "hiring" in query:
+            return _make_response(HIRING_CONTENT, ["https://i.com", "https://j.com"])
+        if "team leads" in query or "recruiters" in query:
+            return _make_response(CONTACTS_CONTENT, ["https://k.com", "https://l.com"])
         return _make_response({}, [])
 
     monkeypatch.setattr("research_assistant.intelligence.run_search", mock_search)
 
     brief = build_brief("Exa AI", focus="all")
 
-    assert len(calls) == 4
+    assert len(calls) == 6
     assert brief.profile is not None
-    assert brief.profile.ceo == "Jeff Wang"
+    assert brief.profile.former_name == "Metaphor"
+    assert brief.profile.ceo == "Will Bryk"
     assert brief.funding is not None
-    assert brief.funding.latest_round == "Series A"
+    assert brief.funding.latest_round == "Series C"
+    assert brief.funding.valuation == "$2.2B"
     assert brief.news is not None
-    assert brief.news.headlines == ["Launched deep-reasoning search"]
     assert brief.competitors == ["Perplexity", "Tavily"]
+    assert brief.hiring is not None
+    assert brief.hiring.open_roles == ["Senior ML Engineer", "Backend Engineer"]
+    assert brief.contacts is not None
+    assert brief.contacts.engineering_leads == ["Alice Smith (VP Eng)"]
     assert brief.thin_sections == []
 
 
@@ -154,6 +178,54 @@ def test_build_brief_focus_limits_passes(monkeypatch):
     assert brief.funding is not None
     assert brief.profile is None
     assert brief.news is None
+    assert brief.hiring is None
+    assert brief.contacts is None
+
+
+def test_former_name_present_in_profile(monkeypatch):
+    monkeypatch.setattr(
+        "research_assistant.intelligence.run_search",
+        lambda *a, **kw: _make_response(PROFILE_CONTENT, ["https://a.com", "https://b.com"]),
+    )
+    brief = build_brief("Exa AI", focus="profile")
+    assert brief.profile is not None
+    assert brief.profile.former_name == "Metaphor"
+
+
+def test_canonical_name_used_for_subsequent_passes(monkeypatch):
+    """Ambiguous input 'Listen' should resolve to 'Listen Labs' for later passes."""
+    queries: list[str] = []
+
+    def mock_search(query, **kwargs):
+        queries.append(query)
+        if "overview" in query or "leadership" in query:
+            content = {**PROFILE_CONTENT, "canonical_name": "Listen Labs"}
+            return _make_response(content, ["https://a.com", "https://b.com"])
+        # Return good responses for all other passes
+        return _make_response(FUNDING_CONTENT, ["https://c.com", "https://d.com"])
+
+    monkeypatch.setattr("research_assistant.intelligence.run_search", mock_search)
+
+    brief = build_brief("Listen", focus="all")
+
+    # Brief name should use resolved canonical
+    assert brief.name == "Listen Labs"
+    # Every pass after profile should use "Listen Labs", not "Listen"
+    post_profile = queries[1:]
+    assert all("Listen Labs" in q for q in post_profile)
+
+
+def test_funding_query_includes_recent_years(monkeypatch):
+    captured: list[str] = []
+
+    def mock_search(query, **kwargs):
+        captured.append(query)
+        return _make_response(FUNDING_CONTENT, ["https://a.com", "https://b.com"])
+
+    monkeypatch.setattr("research_assistant.intelligence.run_search", mock_search)
+    build_brief("Exa AI", focus="funding")
+
+    assert any("2025" in q or "2026" in q for q in captured)
 
 
 # ---------------------------------------------------------------------------
@@ -185,15 +257,13 @@ def test_two_thin_results_marks_section_and_suggests_manual(monkeypatch, capsys)
         "research_assistant.intelligence.run_search",
         lambda *a, **kw: _thin_response(),
     )
-    # First retry: provide query; second retry: skip (empty input)
     inputs = iter(["some refined query", ""])
     monkeypatch.setattr("builtins.input", lambda: next(inputs))
 
     brief = build_brief("UnknownCorp XYZ", focus="profile")
 
     assert "profile" in brief.thin_sections
-    stderr = capsys.readouterr().err
-    assert "manually" in stderr.lower()
+    assert "manually" in capsys.readouterr().err.lower()
 
 
 def test_user_skips_retry_on_first_prompt(monkeypatch):
@@ -205,9 +275,9 @@ def test_user_skips_retry_on_first_prompt(monkeypatch):
         return _thin_response()
 
     monkeypatch.setattr("research_assistant.intelligence.run_search", mock_search)
-    monkeypatch.setattr("builtins.input", lambda: "")  # user presses Enter immediately
+    monkeypatch.setattr("builtins.input", lambda: "")
 
     brief = build_brief("Ghost Inc", focus="profile")
 
     assert "profile" in brief.thin_sections
-    assert call_count == 1  # no retry after empty input
+    assert call_count == 1

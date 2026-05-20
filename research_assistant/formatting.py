@@ -58,11 +58,16 @@ def _section(label: str, lines: list[str]) -> None:
 
 
 def render_brief(brief) -> None:  # brief: CompanyBrief
-    print(f"\n{brief.name}")
+    p = brief.profile
+
+    # Header
+    name_line = brief.name
+    if p and p.former_name:
+        name_line += f"  (formerly {p.former_name})"
+    print(f"\n{name_line}")
     print("═" * W)
 
-    if brief.profile:
-        p = brief.profile
+    if p:
         _section("Overview", [p.overview] if p.overview else [])
         meta = "  ·  ".join(filter(None, [
             f"Founded {p.founded_year}" if p.founded_year else None,
@@ -107,6 +112,24 @@ def render_brief(brief) -> None:  # brief: CompanyBrief
         if brief.competitive_landscape:
             print(" " * 14 + brief.competitive_landscape)
 
+    if brief.hiring:
+        h = brief.hiring
+        print("\n" + "─" * W)
+        lines = [f"› {r}" for r in h.open_roles]
+        if h.hiring_teams:
+            lines.append(f"Teams: {', '.join(h.hiring_teams)}")
+        if h.hiring_signals:
+            lines.append(h.hiring_signals)
+        _section("Hiring", lines)
+
+    if brief.contacts:
+        c = brief.contacts
+        print("\n" + "─" * W)
+        lines = [f"› {name}" for name in c.engineering_leads]
+        lines += [f"› (recruiter) {name}" for name in c.recruiters]
+        lines += [f"› {name}" for name in c.notable_engineers]
+        _section("Contacts", lines)
+
     # Flatten and deduplicate all citations
     seen: set[str] = set()
     all_cites: list[tuple[str, str]] = []
@@ -138,9 +161,16 @@ def _md_list(items: list[str], prefix: str = "-") -> str:
 def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyBrief
     slug = brief.name.lower().replace(" ", "-").replace("/", "-")
     path = out_dir / f"{slug}-brief.md"
+    p = brief.profile
 
-    lines: list[str] = [
-        f"# {brief.name} — Company Intelligence Brief",
+    lines: list[str] = []
+
+    # Header — include former name if present
+    title = brief.name
+    if p and p.former_name:
+        title += f" *(formerly {p.former_name})*"
+    lines += [
+        f"# {title} — Company Intelligence Brief",
         f"*Generated: {date.today().isoformat()}*",
         "",
         "---",
@@ -148,8 +178,7 @@ def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyB
     ]
 
     # Overview
-    if brief.profile:
-        p = brief.profile
+    if p:
         lines += ["## Overview", ""]
         if p.overview:
             lines.append(p.overview)
@@ -165,12 +194,9 @@ def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyB
         if p.key_products:
             lines += [f"**Key products:** {p.key_products}", ""]
         lines += ["### Leadership", ""]
-        leads = [
-            f"**CEO:** {p.ceo}" if p.ceo else None,
-            f"**CTO:** {p.cto}" if p.cto else None,
-        ]
-        for lead in filter(None, leads):
-            lines.append(f"- {lead}")
+        for label, val in [("CEO", p.ceo), ("CTO", p.cto)]:
+            if val:
+                lines.append(f"- **{label}:** {val}")
         lines += ["", "---", ""]
     else:
         lines += ["## Overview", "", "_No profile data found._", "", "---", ""]
@@ -179,16 +205,11 @@ def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyB
     lines += ["## Funding", ""]
     if brief.funding:
         f = brief.funding
-        table_rows = []
-        if f.latest_round or f.latest_amount or f.latest_date:
-            table_rows.append(
-                f"| {f.latest_round or '—'} | {f.latest_amount or '—'} | {f.latest_date or '—'} |"
-            )
-        if table_rows:
+        if any([f.latest_round, f.latest_amount, f.latest_date]):
             lines += [
                 "| Round | Amount | Date |",
                 "|---|---|---|",
-                *table_rows,
+                f"| {f.latest_round or '—'} | {f.latest_amount or '—'} | {f.latest_date or '—'} |",
                 "",
             ]
         if f.total_raised:
@@ -222,6 +243,34 @@ def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyB
         lines += ["_No competitor data found._", ""]
     lines += ["---", ""]
 
+    # Hiring
+    lines += ["## Hiring Signals", ""]
+    if brief.hiring:
+        h = brief.hiring
+        if h.open_roles:
+            lines += ["**Open roles:**", "", _md_list(h.open_roles), ""]
+        if h.hiring_teams:
+            lines += [f"**Active hiring teams:** {', '.join(h.hiring_teams)}", ""]
+        if h.hiring_signals:
+            lines += [h.hiring_signals, ""]
+    else:
+        lines += ["_No hiring data found._", ""]
+    lines += ["---", ""]
+
+    # Contacts
+    lines += ["## Key Contacts", ""]
+    if brief.contacts:
+        c = brief.contacts
+        if c.engineering_leads:
+            lines += ["**Engineering leads:**", "", _md_list(c.engineering_leads), ""]
+        if c.recruiters:
+            lines += ["**Recruiters:**", "", _md_list(c.recruiters), ""]
+        if c.notable_engineers:
+            lines += ["**Notable engineers:**", "", _md_list(c.notable_engineers), ""]
+    else:
+        lines += ["_No contact data found._", ""]
+    lines += ["---", ""]
+
     # Sources
     seen: set[str] = set()
     all_cites: list[tuple[str, str]] = []
@@ -237,7 +286,7 @@ def write_markdown(brief, out_dir: Path = Path(".")) -> Path:  # brief: CompanyB
         lines.append(f"[{i}] [{label}]({url})")
     lines += ["", "---", ""]
 
-    # Brainstorm section — the whole point of the md file
+    # Brainstorm section
     lines += [
         "## Brainstorm Notes",
         "",

@@ -12,7 +12,9 @@ from research_assistant.search import run_search
 PROFILE_SCHEMA: dict = {
     "type": "object",
     "properties": {
+        "canonical_name": {"type": "string"},
         "overview": {"type": "string"},
+        "former_name": {"type": "string"},
         "founded_year": {"type": "string"},
         "headquarters": {"type": "string"},
         "employee_count": {"type": "string"},
@@ -51,6 +53,24 @@ COMPETITORS_SCHEMA: dict = {
     },
 }
 
+HIRING_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "open_roles": {"type": "array", "items": {"type": "string"}},
+        "hiring_teams": {"type": "array", "items": {"type": "string"}},
+        "hiring_signals": {"type": "string"},
+    },
+}
+
+CONTACTS_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "engineering_leads": {"type": "array", "items": {"type": "string"}},
+        "recruiters": {"type": "array", "items": {"type": "string"}},
+        "notable_engineers": {"type": "array", "items": {"type": "string"}},
+    },
+}
+
 # ---------------------------------------------------------------------------
 # Data models
 # ---------------------------------------------------------------------------
@@ -59,6 +79,8 @@ COMPETITORS_SCHEMA: dict = {
 @dataclass
 class ProfileInfo:
     overview: str
+    canonical_name: str | None
+    former_name: str | None
     founded_year: str | None
     headquarters: str | None
     employee_count: str | None
@@ -84,6 +106,20 @@ class NewsInfo:
 
 
 @dataclass
+class HiringInfo:
+    open_roles: list[str]
+    hiring_teams: list[str]
+    hiring_signals: str | None
+
+
+@dataclass
+class ContactsInfo:
+    engineering_leads: list[str]
+    recruiters: list[str]
+    notable_engineers: list[str]
+
+
+@dataclass
 class CompanyBrief:
     name: str
     profile: ProfileInfo | None
@@ -91,6 +127,8 @@ class CompanyBrief:
     news: NewsInfo | None
     competitors: list[str]
     competitive_landscape: str | None
+    hiring: HiringInfo | None
+    contacts: ContactsInfo | None
     thin_sections: list[str]
     citations: dict[str, list[tuple[str, str]]]  # section → [(url, title)]
 
@@ -149,12 +187,20 @@ def _fetch_profile(query: str, search_type: str) -> object:
 
 
 def _fetch_funding(query: str, search_type: str) -> object:
+    # Broad domain list so freshly-announced rounds on TechCrunch/Reuters
+    # aren't missed before Crunchbase indexes them.
     return run_search(
-        f"{query} funding round investors raised valuation",
-        num_results=5,
+        f"{query} latest funding round raised investors valuation 2025 2026",
+        num_results=8,
         search_type=search_type,
         output_schema=FUNDING_SCHEMA,
-        include_domains=["crunchbase.com", "techcrunch.com", "axios.com", "bloomberg.com"],
+        include_domains=[
+            "crunchbase.com", "pitchbook.com",
+            "techcrunch.com", "axios.com",
+            "bloomberg.com", "reuters.com",
+            "businessinsider.com", "forbes.com",
+            "a16z.com", "a16z.news",
+        ],
     )
 
 
@@ -175,6 +221,27 @@ def _fetch_competitors(query: str, search_type: str) -> object:
         num_results=5,
         search_type=search_type,
         output_schema=COMPETITORS_SCHEMA,
+    )
+
+
+def _fetch_hiring(query: str, search_type: str) -> object:
+    return run_search(
+        f"{query} jobs hiring open roles engineering positions",
+        num_results=5,
+        search_type=search_type,
+        output_schema=HIRING_SCHEMA,
+        include_domains=["linkedin.com", "greenhouse.io", "lever.co", "ashbyhq.com", "wellfound.com"],
+    )
+
+
+def _fetch_contacts(query: str, search_type: str) -> object:
+    return run_search(
+        f"{query} engineering team leads recruiters employees",
+        num_results=5,
+        search_type=search_type,
+        output_schema=CONTACTS_SCHEMA,
+        category="people",
+        include_domains=["linkedin.com"],
     )
 
 # ---------------------------------------------------------------------------
@@ -247,6 +314,8 @@ def build_brief(
             c = _get_content(resp)
             profile = ProfileInfo(
                 overview=c.get("overview", ""),
+                canonical_name=c.get("canonical_name"),
+                former_name=c.get("former_name"),
                 founded_year=c.get("founded_year"),
                 headquarters=c.get("headquarters"),
                 employee_count=c.get("employee_count"),
@@ -258,11 +327,16 @@ def build_brief(
         else:
             thin_sections.append("profile")
 
+    # Use the canonical name from the profile pass for all subsequent queries so
+    # that ambiguous inputs like "Listen" resolve to "Listen Labs" before hitting
+    # news, funding, competitors, etc.
+    query = (profile.canonical_name if profile and profile.canonical_name else None) or company
+
     # --- Funding ---
     funding: FundingInfo | None = None
     if focus in ("all", "funding"):
         resp = _fetch_with_retry(
-            lambda q: _fetch_funding(q, search_type), company, "funding"
+            lambda q: _fetch_funding(q, search_type), query, "funding"
         )
         if resp:
             c = _get_content(resp)
@@ -282,7 +356,7 @@ def build_brief(
     news: NewsInfo | None = None
     if focus in ("all", "news"):
         resp = _fetch_with_retry(
-            lambda q: _fetch_news(q, search_type, since_date), company, "news"
+            lambda q: _fetch_news(q, search_type, since_date), query, "news"
         )
         if resp:
             c = _get_content(resp)
@@ -299,7 +373,7 @@ def build_brief(
     landscape: str | None = None
     if focus in ("all", "competitors"):
         resp = _fetch_with_retry(
-            lambda q: _fetch_competitors(q, search_type), company, "competitors"
+            lambda q: _fetch_competitors(q, search_type), query, "competitors"
         )
         if resp:
             c = _get_content(resp)
@@ -309,13 +383,49 @@ def build_brief(
         else:
             thin_sections.append("competitors")
 
+    # --- Hiring signals ---
+    hiring: HiringInfo | None = None
+    if focus in ("all", "hiring"):
+        resp = _fetch_with_retry(
+            lambda q: _fetch_hiring(q, search_type), query, "hiring"
+        )
+        if resp:
+            c = _get_content(resp)
+            hiring = HiringInfo(
+                open_roles=c.get("open_roles") or [],
+                hiring_teams=c.get("hiring_teams") or [],
+                hiring_signals=c.get("hiring_signals"),
+            )
+            citations["hiring"] = _get_citations(resp)
+        else:
+            thin_sections.append("hiring")
+
+    # --- Contacts ---
+    contacts: ContactsInfo | None = None
+    if focus in ("all", "contacts", "people"):
+        resp = _fetch_with_retry(
+            lambda q: _fetch_contacts(q, search_type), query, "contacts"
+        )
+        if resp:
+            c = _get_content(resp)
+            contacts = ContactsInfo(
+                engineering_leads=c.get("engineering_leads") or [],
+                recruiters=c.get("recruiters") or [],
+                notable_engineers=c.get("notable_engineers") or [],
+            )
+            citations["contacts"] = _get_citations(resp)
+        else:
+            thin_sections.append("contacts")
+
     return CompanyBrief(
-        name=company,
+        name=query,
         profile=profile,
         funding=funding,
         news=news,
         competitors=competitors,
         competitive_landscape=landscape,
+        hiring=hiring,
+        contacts=contacts,
         thin_sections=thin_sections,
         citations=citations,
     )

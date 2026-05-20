@@ -55,7 +55,7 @@ def _company_main() -> None:
     parser.add_argument(
         "--focus",
         default="all",
-        choices=["all", "profile", "funding", "news", "competitors", "people"],
+        choices=["all", "profile", "funding", "news", "competitors", "hiring", "contacts", "people"],
         help="Limit to a single section (default: all)",
     )
     parser.add_argument(
